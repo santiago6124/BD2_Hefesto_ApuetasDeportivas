@@ -1,17 +1,23 @@
-# Diagramas Paso 3 - Modelo Lógico del Data Warehouse
+# DIAGRAMAS DEL PASO 3 - MODELO LÓGICO (ESQUEMA ESTRELLA)
 
-Este directorio contiene los diagramas visuales completos del Paso 3 de la metodología HEFESTO para el Data Warehouse de Apuestas Deportivas.
+**Fecha de Generación**: 2025-11-06
+**Esquema**: Estrella (Star Schema)
+**Total de Diagramas**: 45 PNG
+
+---
+
+Este directorio contiene los diagramas visuales completos del Paso 3 de la metodología HEFESTO para el Data Warehouse de Apuestas Deportivas, utilizando **esquema de estrella** con una tabla de hechos consolidada.
 
 ## 📋 Contenido
 
 | Archivo | Descripción | Diagramas |
 |---------|-------------|-----------|
-| **diagrama_3a_esquema_constelacion.md** | Tipo de esquema seleccionado (Constelación) | 6 diagramas |
-| **diagrama_3b_dimensiones.md** | Diseño de las 6 tablas de dimensiones | 15+ diagramas |
-| **diagrama_3c_tablas_hechos.md** | Diseño de las 2 tablas de hechos | 12+ diagramas |
-| **diagrama_3d_relaciones.md** | Relaciones y cardinalidades completas | 10+ diagramas |
+| **diagrama_3a_esquema_estrella.md** | Esquema de Estrella (una tabla de hechos) | 7 diagramas |
+| **diagrama_3b_dimensiones.md** | Diseño de las 6 tablas de dimensiones | 17 diagramas |
+| **diagrama_3c_tabla_hechos.md** | Diseño de FACT_APUESTAS única | 9 diagramas |
+| **diagrama_3d_relaciones.md** | Relaciones y cardinalidades completas | 12 diagramas |
 
-**Total**: 4 archivos con 40+ diagramas Mermaid
+**Total**: 4 archivos con 45 diagramas PNG generados
 
 ---
 
@@ -85,24 +91,25 @@ mmdc -i diagrama_3a_esquema_constelacion.md -o output.png -w 2000 -H 1500
 
 ## 📚 Estructura de los Diagramas
 
-### 3a) Esquema de Constelación
+### 3a) Esquema de Estrella
 
-**Archivo**: `diagrama_3a_esquema_constelacion.md`
+**Archivo**: `diagrama_3a_esquema_estrella.md`
 
-**Diagramas incluidos**:
-1. Esquema de Constelación - Vista General
-2. Comparación con alternativas (Estrella, Copo de Nieve)
-3. Flujo de consultas - Pregunta 1 (Casa más precisa)
-4. Flujo de consultas - Pregunta 2 (ROI por estrategia)
-5. Flujo de consultas - Pregunta 3 (Oportunidades arbitraje)
-6. Cardinalidades del esquema (ER Diagram)
+**Diagramas incluidos** (7 PNG):
+1. Esquema de Estrella - Vista General
+2. Justificación vs Constelación
+3. Diagrama Entidad-Relación Detallado
+4. Flujo de consultas - Pregunta 1 (Casa más precisa)
+5. Flujo de consultas - Pregunta 2 (ROI por estrategia)
+6. Flujo de consultas - Pregunta 3 (Arbitraje con índice filtrado)
+7. Cardinalidades del esquema
 
 **Métricas clave**:
-- 2 tablas de hechos
-- 6 dimensiones (4 conformadas)
-- 903,680 registros FACT_APUESTAS
-- 22,592 registros FACT_ARBITRAJE
-- 40x mejora performance en queries de arbitraje
+- 1 tabla de hechos (FACT_APUESTAS consolidada)
+- 6 dimensiones
+- 903,680 registros
+- 8 campos derivados de arbitraje pre-calculados
+- Índice filtrado para queries de arbitraje
 
 ---
 
@@ -149,37 +156,38 @@ mmdc -i diagrama_3a_esquema_constelacion.md -o output.png -w 2000 -H 1500
 
 ---
 
-### 3c) Tablas de Hechos
+### 3c) Tabla de Hechos Única
 
-**Archivo**: `diagrama_3c_tablas_hechos.md`
+**Archivo**: `diagrama_3c_tabla_hechos.md`
 
-**Tablas documentadas**:
+**Tabla documentada** (9 PNG):
 
-1. **FACT_APUESTAS** (~903,680 registros)
-   - Estructura completa con todos los campos
-   - Clave primaria compuesta (6 columnas)
-   - Clasificación de métricas:
-     - Aditivas: ganancia_total, perdida_total, inversion, cant_aciertos, cant_apuestas
-     - No-aditivas: cuota_apostada, roi_porcentaje, precision_porcentaje
-   - Granularidad y cardinalidad detallada
-   - Relaciones con 7 dimensiones
-   - Uso en indicadores de negocio
+**FACT_APUESTAS** (~903,680 registros) - Tabla consolidada
+   - Estructura completa ER con todos los campos
+   - Clave primaria compuesta (7 columnas)
+   - Clasificación de campos:
+     - **Hechos Aditivos**: ganancia_total, perdida_total, inversion, cant_aciertos, cant_apuestas
+     - **Hechos Semi-Aditivos**: cuotas (apostada, local, empate, visitante)
+     - **Campos Derivados de Arbitraje** (8): Pre-calculados en ETL
+       - arbitraje_cuota_*_max (3 campos)
+       - arbitraje_casa_*_mejor (3 campos)
+       - arbitraje_porcentaje, arbitraje_es_oportunidad, arbitraje_beneficio
+   - Granularidad: 1 apuesta individual
+   - Relaciones con 6 dimensiones + 3 FK adicionales
+   - Índices (6): 5 estándar + 1 filtrado para arbitraje
+   - Uso en TODOS los indicadores
 
-2. **FACT_ARBITRAJE** (~22,592 registros)
-   - Estructura completa con campos de arbitraje
-   - Clave primaria compuesta (4 columnas)
-   - Lógica de detección de arbitraje (suma inversa < 1)
-   - Cardinalidad reducida (40x menos registros)
-   - Relaciones con 4 dimensiones + 3 FK adicionales
-   - Uso en indicadores de oportunidades
-
-**Comparaciones**:
-- Dimensiones relacionadas
-- Granularidad comparada (fina vs gruesa)
-- Métricas y tipos
-- Ventaja de performance (40x)
-- Matriz de indicadores vs tablas
-- Decisión arquitectónica: ¿por qué dos tablas?
+**Diagramas incluidos**:
+1. Estructura completa (ER)
+2. Clave primaria compuesta
+3. Clasificación de campos
+4. Granularidad y cardinalidad
+5. (Error de parsing)
+6. Relaciones con dimensiones
+7. Cálculo campos derivados arbitraje
+8. Índices definidos
+9. Uso en indicadores
+10. Performance por tipo consulta
 
 ---
 
@@ -238,20 +246,19 @@ mmdc -i diagrama_3a_esquema_constelacion.md -o output.png -w 2000 -H 1500
 
 | Tema | Archivo | Sección |
 |------|---------|---------|
-| **Esquema general del DW** | 3a | Vista General |
-| **Por qué Constelación** | 3a | Justificación, Comparación |
+| **Esquema general del DW** | 3a | Vista General Estrella |
+| **Por qué Estrella** | 3a | Justificación vs Constelación |
 | **Cómo responder preguntas** | 3a | Flujo de Consultas |
 | **Diseño de fecha/tiempo** | 3b | DIM_FECHA |
 | **Equipos y cambios de liga** | 3b | DIM_EQUIPO (SCD-2) |
 | **Estrategias de apuesta** | 3b | DIM_ESTRATEGIA |
 | **Casas de apuestas** | 3b | DIM_CASA_APUESTAS |
-| **Detalle de apuestas** | 3c | FACT_APUESTAS |
-| **Detección de arbitraje** | 3c | FACT_ARBITRAJE |
-| **Performance 40x** | 3c | Ventaja de Performance |
+| **Tabla de hechos única** | 3c | FACT_APUESTAS |
+| **Detección de arbitraje** | 3c | Campos Derivados |
+| **Índice filtrado** | 3c | Índices Definidos |
 | **Todas las FK** | 3d | Matriz de Relaciones |
-| **Drill-across queries** | 3d | Dimensiones Conformadas |
-| **Constraints SQL** | 3d | Integridad Referencial |
-| **Índices** | 3d | Índices para Optimización |
+| **Integridad referencial** | 3d | Constraints |
+| **Performance optimización** | 3c, 3d | Índices |
 
 ---
 
@@ -259,27 +266,27 @@ mmdc -i diagrama_3a_esquema_constelacion.md -o output.png -w 2000 -H 1500
 
 ### Top 5 Diagramas Más Importantes
 
-1. **Esquema de Constelación Completo** (3a)
+1. **Esquema de Estrella Completo** (3a_01)
    - Vista general de todo el DW
-   - Relaciones entre todas las tablas
-   - Cardinalidades y métricas clave
+   - Una tabla de hechos central
+   - 6 dimensiones conectadas
 
-2. **DIM_EQUIPO con SCD Tipo 2** (3b)
+2. **DIM_EQUIPO con SCD Tipo 2** (3b_10-13)
    - Ejemplo de versionado temporal
    - Manejo de ascensos/descensos
    - Validación temporal en queries
 
-3. **FACT_APUESTAS Estructura Completa** (3c)
+3. **FACT_APUESTAS Estructura Completa** (3c_01)
+   - Tabla de hechos única consolidada
    - Granularidad detallada
-   - Clasificación de métricas
-   - Base para 5 de 9 indicadores
+   - Campos derivados de arbitraje
 
-4. **Lógica de Arbitraje** (3c)
-   - Algoritmo de detección
-   - Suma inversa de cuotas
-   - Cálculo de beneficio
+4. **Cálculo Campos Derivados Arbitraje** (3c_07)
+   - Pre-cálculo en ETL
+   - Duplicación por partido
+   - Optimización de performance
 
-5. **Esquema ER Completo con Relaciones** (3d)
+5. **Esquema ER Completo con Relaciones** (3d_01)
    - Todas las tablas y relaciones
    - Cardinalidades visuales
    - Base para implementación SQL
@@ -326,13 +333,13 @@ mmdc -i diagrama_3a_esquema_constelacion.md -o presentacion_esquema.png -w 3000 
 
 | Tipo de Diagrama | Cantidad | Archivos |
 |------------------|----------|----------|
-| **ER Diagrams** | 12 | 3b, 3c, 3d |
-| **Flowcharts** | 8 | 3a, 3b, 3c |
-| **Pie Charts** | 2 | 3b, 3d |
-| **Graph TB/LR** | 20+ | Todos |
-| **Comparisons** | 6 | 3a, 3c |
+| **ER Diagrams** | 10 | 3a, 3b, 3c, 3d |
+| **Flowcharts** | 12 | 3a, 3c |
+| **Graph TB/LR** | 15 | 3a, 3b, 3c, 3d |
+| **Comparisons** | 5 | 3a, 3c |
+| **Índices/Performance** | 3 | 3c, 3d |
 
-**Total estimado**: 40+ diagramas Mermaid
+**Total generado**: 45 diagramas PNG (95.7% éxito de 47 intentos)
 
 ---
 
@@ -433,9 +440,20 @@ Una vez visualizados los diagramas:
 
 ---
 
-**Documentación generada**: Paso 3 - Modelo Lógico del DW
-**Proyecto**: BD2_Hefesto_ApuetasDeportivas
-**Fecha**: 2025-10-30
-**Formato**: Mermaid Diagrams en Markdown
+## 📋 Resumen Final
 
-✅ **4 archivos • 40+ diagramas • Visualización completa del Data Warehouse**
+**Documentación generada**: Paso 3 - Modelo Lógico del DW (Esquema Estrella)
+**Proyecto**: BD2_Hefesto_ApuetasDeportivas
+**Fecha Actualización**: 2025-11-06
+**Formato**: Mermaid Diagrams → PNG (transparente)
+
+✅ **4 archivos • 45 diagramas PNG • Esquema Estrella completo**
+
+### Cambios v2.0
+
+- ✅ Transformación completa de Constelación → Estrella
+- ✅ 1 tabla de hechos consolidada (FACT_APUESTAS)
+- ✅ Campos derivados de arbitraje pre-calculados
+- ✅ 45 diagramas PNG generados con Mermaid CLI
+- ✅ Índice filtrado para optimización
+- ❌ Eliminados todos los archivos de constelación
