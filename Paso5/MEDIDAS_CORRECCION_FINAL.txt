@@ -1,0 +1,137 @@
+==============================================
+MEDIDAS DAX - VERSIÓN FINAL CORREGIDA
+Solución a errores de MAX con medidas
+==============================================
+
+MEDIDAS BÁSICAS (sin cambios - funcionan bien)
+==============================================
+
+Total Aciertos = SUM('apuestas_dw fact_apuestas'[cant_aciertos])
+
+Total Apuestas = SUM('apuestas_dw fact_apuestas'[cant_apuestas])
+
+Ganancia Total = SUM('apuestas_dw fact_apuestas'[ganancia_total])
+
+Pérdida Total = SUM('apuestas_dw fact_apuestas'[perdida_total])
+
+Inversión Total = SUM('apuestas_dw fact_apuestas'[inversion])
+
+Total Partidos = DISTINCTCOUNT('apuestas_dw fact_apuestas'[ID_Partido])
+
+==============================================
+MEDIDAS CALCULADAS (sin cambios)
+==============================================
+
+Precisión % = DIVIDE([Total Aciertos], [Total Apuestas], 0) * 100
+
+Beneficio Neto = [Ganancia Total] - [Pérdida Total]
+
+ROI % = DIVIDE([Beneficio Neto], [Inversión Total], 0) * 100
+
+Partidos con Arbitraje = CALCULATE(DISTINCTCOUNT('apuestas_dw fact_apuestas'[ID_Partido]), 'apuestas_dw fact_apuestas'[arbitraje_es_oportunidad] = TRUE())
+
+% Partidos Arbitraje = DIVIDE([Partidos con Arbitraje], [Total Partidos], 0) * 100
+
+Beneficio Arbitraje Promedio = CALCULATE(AVERAGE('apuestas_dw fact_apuestas'[arbitraje_beneficio]), 'apuestas_dw fact_apuestas'[arbitraje_es_oportunidad] = TRUE())
+
+==============================================
+MEDIDAS DE FORMATO (sin cambios)
+==============================================
+
+Precisión Texto = FORMAT([Precisión %], "0.00") & "%"
+
+ROI Texto = FORMAT([ROI %], "+0.00;-0.00") & "%"
+
+KPI Precisión = SWITCH(TRUE(), [Precisión %] >= 55, "🟢 Alta", [Precisión %] >= 50, "🟡 Media", "🔴 Baja")
+
+Color ROI = SWITCH(TRUE(), [ROI %] > 5, "#00A36C", [ROI %] > 0, "#90EE90", [ROI %] > -5, "#FFD700", "#FF6B6B")
+
+==============================================
+MEDIDAS AVANZADAS - ¡CORREGIDAS!
+==============================================
+
+--- MEDIDA 5: Casa Más Precisa (CORREGIDA) ---
+Casa Más Precisa =
+VAR TopCasa =
+    TOPN(
+        1,
+        ALLSELECTED('apuestas_dw dim_casa_apuestas'),
+        [Precisión %],
+        DESC
+    )
+RETURN
+    CONCATENATEX(TopCasa, 'apuestas_dw dim_casa_apuestas'[nombre_completo])
+
+--- MEDIDA 12: Mejor Estrategia (CORREGIDA) ---
+Mejor Estrategia =
+VAR TopEstrategia =
+    TOPN(
+        1,
+        ALLSELECTED('apuestas_dw dim_estrategia'),
+        [ROI %],
+        DESC
+    )
+RETURN
+    CONCATENATEX(TopEstrategia, 'apuestas_dw dim_estrategia'[nombre_estrategia])
+
+--- MEDIDA 17: Oportunidades Arbitraje (sin cambios) ---
+Oportunidades Arbitraje = [Partidos con Arbitraje]
+
+--- MEDIDA 20: Partidos Analizados (sin cambios) ---
+Partidos Analizados = DISTINCTCOUNT('apuestas_dw fact_apuestas'[ID_Partido])
+
+==============================================
+RESUMEN TOTAL: 20 MEDIDAS
+==============================================
+
+✓ 6 medidas básicas (SUM, DISTINCTCOUNT)
+✓ 6 medidas calculadas (DIVIDE, CALCULATE)
+✓ 4 medidas de formato (FORMAT, SWITCH)
+✓ 4 medidas avanzadas (TOPN, CONCATENATEX)
+
+==============================================
+ORDEN DE CREACIÓN RECOMENDADO
+==============================================
+
+BLOQUE 1 - Crear primero (independientes):
+1. Total Aciertos
+2. Total Apuestas
+3. Ganancia Total
+4. Pérdida Total
+5. Inversión Total
+6. Total Partidos
+
+BLOQUE 2 - Crear segundo (dependen de Bloque 1):
+7. Precisión %
+8. Beneficio Neto
+9. ROI %
+10. Partidos con Arbitraje
+11. % Partidos Arbitraje
+12. Beneficio Arbitraje Promedio
+
+BLOQUE 3 - Crear tercero (formato):
+13. Precisión Texto
+14. ROI Texto
+15. KPI Precisión
+16. Color ROI
+
+BLOQUE 4 - Crear último (avanzadas):
+17. Casa Más Precisa
+18. Mejor Estrategia
+19. Oportunidades Arbitraje
+20. Partidos Analizados
+
+==============================================
+VERIFICACIÓN RÁPIDA
+==============================================
+
+Después de crear "Total Partidos":
+Debería mostrar: ~22,502 partidos
+
+Después de crear "Casa Más Precisa":
+Debería mostrar: Nombre de una casa de apuestas
+
+Después de crear "Mejor Estrategia":
+Debería mostrar: Nombre de una estrategia
+
+==============================================

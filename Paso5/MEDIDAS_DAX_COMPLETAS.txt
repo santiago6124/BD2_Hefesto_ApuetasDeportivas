@@ -1,0 +1,122 @@
+==============================================
+MEDIDAS DAX - DATA WAREHOUSE APUESTAS DEPORTIVAS
+==============================================
+
+INSTRUCCIONES:
+1. En Power BI, clic derecho en panel Campos → "Nueva tabla"
+2. Copiar y pegar: Medidas = {0}
+3. Enter
+4. Para cada medida abajo: Clic derecho en "Medidas" → "Nueva medida" → Copiar código → Enter
+
+==============================================
+COLUMNA CALCULADA (Crear PRIMERO en fact_apuestas)
+==============================================
+
+Nombre: ID_Partido
+Tabla: fact_apuestas
+Código:
+ID_Partido = fact_apuestas[id_fecha] & "-" & fact_apuestas[id_equipo_local] & "-" & fact_apuestas[id_equipo_visitante]
+
+==============================================
+PARTE 1: MEDIDAS DE PRECISIÓN
+==============================================
+
+--- Medida 1 ---
+Total Aciertos = SUM(fact_apuestas[cant_aciertos])
+
+--- Medida 2 ---
+Total Apuestas = SUM(fact_apuestas[cant_apuestas])
+
+--- Medida 3 ---
+Precisión % = DIVIDE([Total Aciertos], [Total Apuestas], 0) * 100
+
+--- Medida 4 ---
+Precisión Texto = FORMAT([Precisión %], "0.00") & "%"
+
+--- Medida 5 ---
+Casa Más Precisa =
+VAR MaxPrecision = CALCULATE(MAX([Precisión %]), ALLSELECTED(dim_casa_apuestas))
+RETURN CALCULATE(SELECTEDVALUE(dim_casa_apuestas[nombre_completo]), FILTER(ALLSELECTED(dim_casa_apuestas), [Precisión %] = MaxPrecision))
+
+==============================================
+PARTE 2: MEDIDAS DE ROI
+==============================================
+
+--- Medida 6 ---
+Ganancia Total = SUM(fact_apuestas[ganancia_total])
+
+--- Medida 7 ---
+Pérdida Total = SUM(fact_apuestas[perdida_total])
+
+--- Medida 8 ---
+Inversión Total = SUM(fact_apuestas[inversion])
+
+--- Medida 9 ---
+Beneficio Neto = [Ganancia Total] - [Pérdida Total]
+
+--- Medida 10 ---
+ROI % = DIVIDE([Beneficio Neto], [Inversión Total], 0) * 100
+
+--- Medida 11 ---
+ROI Texto = FORMAT([ROI %], "+0.00;-0.00") & "%"
+
+--- Medida 12 ---
+Mejor Estrategia =
+VAR MaxROI = CALCULATE(MAX([ROI %]), ALLSELECTED(dim_estrategia))
+RETURN CALCULATE(SELECTEDVALUE(dim_estrategia[nombre_estrategia]), FILTER(ALLSELECTED(dim_estrategia), [ROI %] = MaxROI))
+
+==============================================
+PARTE 3: MEDIDAS DE ARBITRAJE
+==============================================
+
+--- Medida 13 ---
+Total Partidos = DISTINCTCOUNT(fact_apuestas[ID_Partido])
+
+--- Medida 14 ---
+Partidos con Arbitraje = CALCULATE(DISTINCTCOUNT(fact_apuestas[ID_Partido]), fact_apuestas[arbitraje_es_oportunidad] = TRUE())
+
+--- Medida 15 ---
+% Partidos Arbitraje = DIVIDE([Partidos con Arbitraje], [Total Partidos], 0) * 100
+
+--- Medida 16 ---
+Beneficio Arbitraje Promedio = CALCULATE(AVERAGE(fact_apuestas[arbitraje_beneficio]), fact_apuestas[arbitraje_es_oportunidad] = TRUE())
+
+--- Medida 17 ---
+Oportunidades Arbitraje = [Partidos con Arbitraje]
+
+==============================================
+PARTE 4: MEDIDAS AUXILIARES
+==============================================
+
+--- Medida 18 ---
+KPI Precisión = SWITCH(TRUE(), [Precisión %] >= 55, "🟢 Alta", [Precisión %] >= 50, "🟡 Media", "🔴 Baja")
+
+--- Medida 19 ---
+Color ROI = SWITCH(TRUE(), [ROI %] > 5, "#00A36C", [ROI %] > 0, "#90EE90", [ROI %] > -5, "#FFD700", "#FF6B6B")
+
+--- Medida 20 ---
+Partidos Analizados = DISTINCTCOUNT(fact_apuestas[ID_Partido])
+
+==============================================
+RESUMEN: 20 MEDIDAS + 1 COLUMNA CALCULADA
+==============================================
+
+COLUMNA CALCULADA:
+✓ ID_Partido (en fact_apuestas)
+
+MEDIDAS (en tabla Medidas):
+✓ 5 medidas de Precisión
+✓ 7 medidas de ROI
+✓ 5 medidas de Arbitraje
+✓ 3 medidas Auxiliares
+
+==============================================
+SIGUIENTE PASO: CREAR DASHBOARDS
+==============================================
+
+Una vez creadas todas las medidas, continuar con:
+- Dashboard 1: Precisión de Casas de Apuestas
+- Dashboard 2: ROI de Estrategias
+- Dashboard 3: Oportunidades de Arbitraje
+
+==============================================
