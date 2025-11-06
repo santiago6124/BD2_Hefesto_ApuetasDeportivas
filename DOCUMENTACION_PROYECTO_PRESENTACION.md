@@ -792,6 +792,63 @@ Bundesliga        | 2014/15   | 142           | 2.01%
 
 ### Paso 4: Integración de Datos (ETL)
 
+En esta etapa se realizó la integración de los datos del dataset “European Soccer Database” (Kaggle), siguiendo la metodología HEFESTO.
+El objetivo fue centralizar la información en un repositorio unificado (Data Warehouse) para su posterior análisis en Power BI o herramientas equivalentes.
+
+## 4.1 Fuente de datos
+
+Archivo original: database.sqlite (formato SQLite)
+Contiene tablas: Country, League, Team, Match
+Total de registros procesados: 25.979 partidos (tabla Match)
+
+## 4.2 Proceso de extracción
+
+Se utilizaron herramientas de línea de comandos de SQLite y un script en Bash (export_sqlite_to_csv.sh) para exportar cada tabla del archivo .sqlite a archivos .csv.
+Esto permitió transformar la base relacional de origen en un formato plano, apto para su importación a MySQL.
+
+## 4.3 Proceso de carga (staging)
+
+Se creó un entorno MySQL denominado apuestas_dw.
+En él se definieron las tablas de staging:
+
+stg_country
+stg_league
+stg_team
+stg_match
+
+Los archivos .csv se cargaron mediante el comando LOAD DATA LOCAL INFILE, consolidando la información cruda en el área de staging.
+
+## 4.4 Transformación y creación de dimensiones/hechos
+
+Se implementó un proceso ETL en Python (etl_apuestas.py) utilizando la librería pandas y el conector mysql-connector-python.
+El proceso realiza las siguientes tareas:
+
+Limpieza y validación de datos.
+Creación de nuevos campos derivados (resultado, año, mes).
+Inserción en las tablas dimensionales y de hechos:
+dim_fecha
+dim_casa_apuestas
+fact_apuestas
+
+## 4.5 Carga en el Data Warehouse
+
+Los datos transformados se cargaron exitosamente en MySQL, cumpliendo las integridades referenciales establecidas.
+El proceso se validó con 25.979 filas insertadas en fact_apuestas.
+
+## 4.6 Conexión con herramientas de análisis
+
+Con la base apuestas_dw disponible, el entorno quedó listo para su conexión con herramientas de BI:
+En Windows, Power BI Desktop se conecta mediante el conector nativo de MySQL (localhost, usuario root, base apuestas_dw).
+
+## 4.7 Resultado final
+
+El entorno de datos resultante permite realizar análisis como:
+Promedio de goles por liga y temporada.
+Distribución de resultados (local/empate/visitante).
+Evaluación de cuotas de apuestas y rendimientos esperados.
+
+Con esto se completó el Paso 4 – Integración de Datos de la metodología HEFESTO, dejando los datos preparados para el Paso 5 – Visualización y Análisis.
+
 #### 12.1. Diseño ETL
 ```
 ┌─────────────────────────────────────────────┐
